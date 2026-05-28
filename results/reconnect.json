@@ -1,0 +1,12 @@
+{
+  "rate_hz": 5.0,
+  "pre_outage_msgs": 18,
+  "during_outage_publisher_alive": true,
+  "post_restart_msgs": 30,
+  "publisher_log_tail": [
+    "2026-05-28 12:15:52,494 publisher publisher start device=recon001 topic=pdm/recon/recon001 rate=5.00Hz",
+    "2026-05-28 12:16:04,296 publisher published=60 fault=healthy severity=0.00",
+    "2026-05-28 12:16:16,298 publisher published=120 fault=healthy severity=0.00",
+    "2026-05-28 12:16:22,494 publisher publisher stop published=150 dropped=0"
+  ]
+}

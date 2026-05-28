@@ -1,0 +1,11 @@
+{
+  "n_probes": 40,
+  "observed_probes": 40,
+  "latency_ms": {
+    "p50": 119.9,
+    "p95": 128.5,
+    "max": 353.6
+  },
+  "spec_target_ms": 200.0,
+  "note": "publish_completed -> DB row visible; upper bound is 5ms SELECT poll granularity"
+}

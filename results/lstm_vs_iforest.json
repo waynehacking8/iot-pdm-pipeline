@@ -1,0 +1,65 @@
+{
+  "device": "cuda",
+  "gpu": {
+    "name": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+    "capability": [
+      12,
+      0
+    ],
+    "total_memory_GB": 102.0
+  },
+  "model_config": {
+    "input_dim": 8,
+    "hidden_dim": 16,
+    "num_layers": 2,
+    "seq_len": 30,
+    "dropout": 0.0
+  },
+  "training": {
+    "n_train_samples": 9000,
+    "epochs": 40,
+    "batch_size": 64,
+    "lr": 0.001,
+    "train_time_s": 2.5,
+    "final_loss": 0.983703297773997
+  },
+  "evaluation": {
+    "eval_per_mode": 900,
+    "seq_len": 30,
+    "overall": {
+      "iforest": {
+        "auroc": 1.0
+      },
+      "lstm": {
+        "auroc": 1.0,
+        "training_time_s": 2.5,
+        "epochs": 40,
+        "final_loss": 0.983703297773997,
+        "n_train_samples": 9000,
+        "n_eval_sequences": 150
+      }
+    },
+    "per_fault_mode": {
+      "imbalance": {
+        "iforest_auroc": 1.0,
+        "lstm_auroc": 1.0
+      },
+      "misalignment": {
+        "iforest_auroc": 1.0,
+        "lstm_auroc": 1.0
+      },
+      "outer_race": {
+        "iforest_auroc": 1.0,
+        "lstm_auroc": 1.0
+      },
+      "inner_race": {
+        "iforest_auroc": 1.0,
+        "lstm_auroc": 1.0
+      }
+    }
+  },
+  "figures": {
+    "training_loss": "figures/lstm_training_loss.png",
+    "roc_vs_iforest": "figures/lstm_vs_iforest_roc.png"
+  }
+}

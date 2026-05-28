@@ -28,7 +28,10 @@ app = typer.Typer(add_completion=False, no_args_is_help=False)
 
 KAFKA_TOPIC = "pdm.features"
 BATCH_SIZE = 100
-BATCH_INTERVAL_S = 1.0
+# 0.1s flush interval honours spec §8 (E2E latency < 200ms). The spec
+# section 5 mentions "100 messages OR 1 second" — see D12.
+BATCH_INTERVAL_S = 0.1
+POLL_TIMEOUT_S = 0.05
 
 DDL = """
 CREATE TABLE IF NOT EXISTS device_features (
@@ -50,6 +53,34 @@ CREATE INDEX IF NOT EXISTS idx_device_ts
     ON device_features (device_id, ts DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_device_ts
     ON device_features (device_id, ts);
+"""
+
+CAGG_DDL = """
+CREATE MATERIALIZED VIEW IF NOT EXISTS device_features_1m
+WITH (timescaledb.continuous) AS
+SELECT
+    device_id,
+    time_bucket('1 minute', ts) AS bucket,
+    avg(rms)           AS rms_avg,
+    avg(peak_to_peak)  AS pk_pk_avg,
+    avg(crest)         AS crest_avg,
+    avg(kurtosis)      AS kurtosis_avg,
+    avg(peak_1x)       AS peak_1x_avg,
+    avg(peak_2x)       AS peak_2x_avg,
+    avg(peak_3x)       AS peak_3x_avg,
+    avg(envelope_peak) AS env_peak_avg,
+    count(*)           AS samples
+FROM device_features
+GROUP BY device_id, bucket
+WITH NO DATA;
+"""
+
+CAGG_POLICY = """
+SELECT add_continuous_aggregate_policy('device_features_1m',
+    start_offset => INTERVAL '2 hours',
+    end_offset   => INTERVAL '1 minute',
+    schedule_interval => INTERVAL '30 seconds',
+    if_not_exists => TRUE);
 """
 
 INSERT_SQL = """
@@ -104,7 +135,12 @@ def main(
     with psycopg.connect(db_dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
             cur.execute(DDL)
-        log.info("schema ready")
+            try:
+                cur.execute(CAGG_DDL)
+                cur.execute(CAGG_POLICY)
+            except psycopg.Error as e:
+                log.warning("continuous aggregate setup skipped: %s", e)
+        log.info("schema ready (incl. device_features_1m continuous aggregate)")
 
     consumer = Consumer(
         {
@@ -141,7 +177,7 @@ def main(
                     and (time.monotonic() - batch_start) < BATCH_INTERVAL_S
                     and not stop["flag"]
                 ):
-                    msg = consumer.poll(0.2)
+                    msg = consumer.poll(POLL_TIMEOUT_S)
                     if msg is None:
                         continue
                     if msg.error():

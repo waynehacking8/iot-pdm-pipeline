@@ -226,3 +226,30 @@ exactly-once persistence in TimescaleDB.
 **What's lost:** ~5x throughput vs. binary `COPY`. At the prototype
 target of 1000 rows/s with batch size 100, `executemany` is fast
 enough (psycopg pipelines the round-trips under the hood).
+
+---
+
+## D12. Consumer batch interval 0.1s, not 1.0s
+
+**Decision:** `ingest/consumer.py` sets `BATCH_INTERVAL_S = 0.1`
+(with `POLL_TIMEOUT_S = 0.05`), not the literal `1 second` in
+`specifications.md` section 5.
+
+**Why:** Section 5 says "Batch by 100 messages OR 1 second". Section
+8 targets E2E latency < 200 ms. With a 1-second batch flush ceiling,
+a single low-rate message waits up to 1050 ms before reaching the
+DB — far above the 200 ms target. These two requirements are
+inconsistent; we honour the externally observable § 8 acceptance.
+
+**Measured impact (`results/latency.json`):**
+- Before: p50 latency was bounded by the 1 s flush -> >1000 ms.
+- With `BATCH_INTERVAL_S = 0.2`: p50 = 220 ms (still over the 200 ms
+  budget by 20 ms).
+- With `BATCH_INTERVAL_S = 0.1` + `POLL_TIMEOUT_S = 0.05`:
+  **p50 = 120 ms, p95 = 128 ms** (well under 200 ms).
+
+**What's lost:** At extreme write rates a smaller batch interval
+means more DB round-trips per batch. At the prototype's nominal
+1 Hz/device load this is negligible; at 1000 row/s sustained
+(measured throughput **4544 row/s** in `results/throughput.json`)
+batch size still hits 100 first so the interval is moot.

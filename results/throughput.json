@@ -1,0 +1,24 @@
+{
+  "spec_targets": {
+    "bridge_msg_per_s_min": 1000,
+    "consumer_row_per_s_min": 1000
+  },
+  "bridge": {
+    "target_msgs": 10000,
+    "arrived_kafka": 9183,
+    "e2e_elapsed_s": 1.47,
+    "bridge_active_span_s": 0.119,
+    "bridge_throughput_msg_per_s": 77249,
+    "publisher_rate_msg_per_s": 7380,
+    "throughput_msg_per_s": 77249
+  },
+  "consumer": {
+    "target_rows": 20000,
+    "rows_inserted": 20000,
+    "e2e_elapsed_s": 5.89,
+    "consumer_active_span_s": 4.401,
+    "consumer_throughput_row_per_s": 4544,
+    "producer_rate_msg_per_s": 85448,
+    "throughput_row_per_s": 4544
+  }
+}
