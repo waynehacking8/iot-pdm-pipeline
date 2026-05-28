@@ -1,0 +1,69 @@
+# Local development stack for the IoT PdM pipeline.
+#
+# Brings up:
+#   - EMQX 5.x MQTT broker on 1883 (MQTT) and 18083 (dashboard).
+#   - Apache Kafka in KRaft single-broker mode on 9092.
+#   - TimescaleDB on 5432 with pre-configured pdm database.
+#   - Grafana on 3000 with TimescaleDB data source pre-provisioned.
+#
+# Bring up:
+#   docker compose up -d
+# Tear down (keep volumes):
+#   docker compose down
+# Tear down (wipe data):
+#   docker compose down -v
+
+version: "3.9"
+
+services:
+  emqx:
+    image: emqx/emqx:5.5
+    container_name: pdm-emqx
+    ports:
+      - "1883:1883"     # MQTT
+      - "8083:8083"     # MQTT over WebSocket
+      - "18083:18083"   # Dashboard
+    healthcheck:
+      test: ["CMD", "emqx", "ctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: pdm-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: pdm-timescaledb
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=pdm
+      - POSTGRES_USER=pdm
+      - POSTGRES_PASSWORD=pdm
+    volumes:
+      - ./data/timescaledb:/var/lib/postgresql/data
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: pdm-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=pdm
+    depends_on:
+      - timescaledb
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
