@@ -163,15 +163,56 @@ status:
 
 ---
 
+## Field context (why this matters)
+
+This prototype implements the **canonical industrial backbone** at
+laptop scale — the same MQTT → Kafka → time-series database →
+visualization pattern used by AWS IoT, Azure IoT Operations, Siemens
+Industrial Edge, and the Delta `DIALink + edgeMES + PQM` lineage.
+
+It exists to make a small number of senior decisions visible and
+defensible:
+
+- **Time as a first-class schema axis** (TimescaleDB hypertable, not
+  a `created_at` column on a relational table).
+- **Edge as a different species, not a small cloud** (feature
+  extraction at the source so 50 bytes / second survive a week of
+  disconnection, not raw 25.6 kHz uploads).
+- **Devices as state machines, not stateless clients** (desired
+  versus actual state; last-will; reconciliation, not commands).
+- **Tiered data lifecycle** (hot OLTP / warm time-series / cold
+  lakehouse), because data value decays but audit obligations do
+  not.
+- **Alarms as signal processing, not event logging** (fingerprint
+  dedup + topology correlation + flapping detection, not
+  push-notification-per-event).
+
+See [`docs/field-evolution.md`](docs/field-evolution.md) for the
+narrative, the five mental models, the three live disagreements in
+the field (MQTT-vs-Kafka, edge-first-vs-cloud-first, time-series
+storage tiering), and an honest "GPT-moment" assessment.
+
+---
+
 ## References
 
-See [`docs/references.md`](docs/references.md). Core background:
+See [`docs/references.md`](docs/references.md), now extended with
+production-pattern references (cardinality, OTA rollback,
+alarm-storm suppression, backpressure, CDC outbox) and the 2024–2026
+industrial-AI frontier (Siemens Industrial Copilot, NVIDIA
+Metropolis, NVIDIA Omniverse / Cosmos). Core background:
 
 - ISA-95 / IPC-CFX / OPC UA — industrial communication standards.
 - MQTT 5.0 specification — pub/sub semantics, QoS, LWT.
 - TimescaleDB time-series optimizations.
 - Rolling-element bearing fault feature literature (RMS, kurtosis,
   envelope spectrum).
+- AWS IoT Greengrass v2 / KubeEdge / Siemens Industrial Edge — the
+  edge-first counter-pattern.
+- Mender / Rauc / SWUpdate — A/B partition + bootloader watchdog for
+  edge-autonomous OTA rollback.
+- Google SRE workbook (alerting), Prometheus Alertmanager — modern
+  alarm-suppression vocabulary.
 
 ---
 
