@@ -87,34 +87,64 @@ iot-pdm-pipeline/
 ├── scripts/            # End-to-end demo entry points
 └── docs/
     ├── architecture.md
-    ├── design-decisions.md
+    ├── design-decisions.md     # D1–D11 (D9–D11 added during impl)
+    ├── specifications.md       # function-level contracts
     ├── roadmap.md
     └── references.md
 ```
 
+After running `scripts/run_experiments.py` and
+`scripts/demo_end_to_end.py`, additional artifacts appear:
+
+```
+results/
+├── REPORT.md                   # auto-generated experiment + demo report
+├── evaluation.json             # offline ROC / F1 / latency numbers
+├── live_summary.json           # row counts, alert log from the live demo
+├── demo-logs/                  # per-subprocess logs from the demo
+└── figures/                    # waveforms, distributions, ROC, timelines
+ml/artifacts/                   # scaler.joblib, model.joblib, training_summary.json
+```
+
 ---
 
-## Quick start (planned — see `docs/roadmap.md` for current status)
+## Quick start
 
 ```bash
-# 1. Bring up infrastructure
-cd infra && docker compose up -d
+# 1. Bring up infrastructure (EMQX 1883, Kafka 9094, TimescaleDB 5432, Grafana 3000)
+cd infra && docker compose up -d && cd ..
 
-# 2. Install Python deps
+# 2. Install Python deps + test runner
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt pytest
 
-# 3. Run the synthetic sensor publisher (one process)
-python -m simulator.publisher --device d001 --rate 1
+# 3. Run the offline experiments (trains model, produces figures + report)
+python -m scripts.run_experiments --train-samples 6000 --eval-per-mode 400
 
-# 4. Run the ingestion bridge (another process)
-python -m ingest.bridge
+# 4. Create Kafka topics
+python - <<'PY'
+from confluent_kafka.admin import AdminClient, NewTopic
+a = AdminClient({"bootstrap.servers": "localhost:9094"})
+for f in a.create_topics([
+    NewTopic("pdm.features", num_partitions=3, replication_factor=1),
+    NewTopic("pdm.scores",   num_partitions=3, replication_factor=1),
+    NewTopic("pdm.alerts",   num_partitions=1, replication_factor=1),
+]).values():
+    try: f.result(timeout=10)
+    except Exception: pass
+PY
 
-# 5. Run the TimescaleDB consumer (another process)
-python -m ingest.consumer
+# 5. Run the live end-to-end demo (4 minutes: healthy -> imbalance -> outer_race)
+python -m scripts.demo_end_to_end --duration-s 240
 
-# 6. Open Grafana at http://localhost:3000 to see the live feature stream
+# 6. Re-render live demo figures
+python -m scripts.plot_live_demo
+
+# 7. Open Grafana at http://localhost:3000 (admin / pdm) for the live feature stream
 ```
+
+All figures land in `results/figures/` and the auto-generated report
+in `results/REPORT.md`.
 
 ---
 
@@ -125,10 +155,10 @@ status:
 
 | Phase | Module | Status |
 |---|---|---|
-| 1 | Vibration simulator + MQTT publisher | scaffold |
-| 2 | MQTT → Kafka → TimescaleDB ingestion | scaffold |
-| 3 | PdM features + offline anomaly model | scaffold |
-| 4 | End-to-end demo + Grafana dashboard | planned |
+| 1 | Vibration simulator + MQTT publisher | done |
+| 2 | MQTT → Kafka → TimescaleDB ingestion | done |
+| 3 | PdM features + offline anomaly model | done — AUROC=1.0, F1=0.957, latency 26–28 s |
+| 4 | End-to-end demo + Grafana dashboard | done (live demo + plots in `results/`) |
 | 5 | Stretch: shadow-mode model rollout, OTA simulation | future |
 
 ---

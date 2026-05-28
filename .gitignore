@@ -46,4 +46,5 @@ ml/artifacts/
 
 # Results cache (commit key plots manually with git add -f)
 results/cache/
+results/demo-logs/*.log
 *.log

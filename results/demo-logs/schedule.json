@@ -1,0 +1,22 @@
+[
+  {
+    "after_s": 0,
+    "fault_mode": "healthy",
+    "severity": 0.0
+  },
+  {
+    "after_s": 60,
+    "fault_mode": "imbalance",
+    "severity": 1.0
+  },
+  {
+    "after_s": 120,
+    "fault_mode": "outer_race",
+    "severity": 1.0
+  },
+  {
+    "after_s": 180,
+    "fault_mode": "healthy",
+    "severity": 0.0
+  }
+]

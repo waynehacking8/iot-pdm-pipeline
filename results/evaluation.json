@@ -1,0 +1,99 @@
+{
+  "training": {
+    "n_samples": 4000,
+    "synth_time_s": 18.63,
+    "fit_time_s": 0.29,
+    "feature_names": [
+      "rms",
+      "peak_to_peak",
+      "crest",
+      "kurtosis",
+      "peak_1x",
+      "peak_2x",
+      "peak_3x",
+      "envelope_peak"
+    ],
+    "feature_means": {
+      "rms": 0.7474979753211407,
+      "peak_to_peak": 2.509706337494564,
+      "crest": 2.0410158712067568,
+      "kurtosis": -1.1466315608635775,
+      "peak_1x": 0.9999984445458199,
+      "peak_2x": 0.3000108708427131,
+      "peak_3x": 0.15000845704253943,
+      "envelope_peak": 0.12443438480917117
+    },
+    "feature_stds": {
+      "rms": 0.0003125264976103185,
+      "peak_to_peak": 0.02417247903971353,
+      "crest": 0.023635859434544257,
+      "kurtosis": 0.001469281017014571,
+      "peak_1x": 0.00044127979883949546,
+      "peak_2x": 0.00044415129186606105,
+      "peak_3x": 0.00043634758773554937,
+      "envelope_peak": 0.0004360518719024898
+    },
+    "model": {
+      "type": "IsolationForest",
+      "n_estimators": 200,
+      "contamination": 0.01,
+      "random_state": 42
+    }
+  },
+  "evaluation": {
+    "threshold": -0.1,
+    "samples_per_mode": 300,
+    "rolling_window_s": 30,
+    "overall": {
+      "auroc": 1.0,
+      "f1_overall": 0.9565217391304348,
+      "false_positive_rate_on_healthy": 0.0,
+      "true_positive_rate_on_faulty": 0.9166666666666666
+    },
+    "per_fault_mode": {
+      "imbalance": {
+        "auroc": 1.0,
+        "f1": 1.0,
+        "recall": 1.0
+      },
+      "misalignment": {
+        "auroc": 1.0,
+        "f1": 1.0,
+        "recall": 1.0
+      },
+      "outer_race": {
+        "auroc": 1.0,
+        "f1": 0.8970588235294118,
+        "recall": 0.8133333333333334
+      },
+      "inner_race": {
+        "auroc": 1.0,
+        "f1": 0.920863309352518,
+        "recall": 0.8533333333333334
+      }
+    },
+    "detection_latency_s_from_onset": {
+      "imbalance": 27,
+      "misalignment": 27,
+      "outer_race": 28,
+      "inner_race": 28
+    }
+  },
+  "figures": {
+    "waveforms": {
+      "healthy": "wave_healthy.png",
+      "imbalance": "wave_imbalance.png",
+      "misalignment": "wave_misalignment.png",
+      "outer_race": "wave_outer_race.png",
+      "inner_race": "wave_inner_race.png"
+    },
+    "feature_distributions": "feature_distributions.png",
+    "roc_by_mode": "roc_by_mode.png",
+    "timelines": {
+      "imbalance": "timeline_imbalance.png",
+      "misalignment": "timeline_misalignment.png",
+      "outer_race": "timeline_outer_race.png",
+      "inner_race": "timeline_inner_race.png"
+    }
+  }
+}

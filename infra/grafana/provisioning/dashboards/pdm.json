@@ -1,0 +1,82 @@
+{
+  "uid": "pdm-overview",
+  "title": "IoT PdM — Live Pipeline",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": {"from": "now-10m", "to": "now"},
+  "timepicker": {},
+  "templating": {"list": []},
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "RMS per device",
+      "datasource": {"type": "postgres", "uid": "TimescaleDB"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "rawSql": "SELECT ts AS time, device_id AS metric, rms FROM device_features WHERE $__timeFilter(ts) ORDER BY ts",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Kurtosis per device",
+      "datasource": {"type": "postgres", "uid": "TimescaleDB"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "rawSql": "SELECT ts AS time, device_id AS metric, kurtosis FROM device_features WHERE $__timeFilter(ts) ORDER BY ts",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "1x / 2x / 3x harmonic peaks (first device)",
+      "datasource": {"type": "postgres", "uid": "TimescaleDB"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "rawSql": "SELECT ts AS time, peak_1x, peak_2x, peak_3x FROM device_features WHERE $__timeFilter(ts) AND device_id = (SELECT device_id FROM device_features ORDER BY ts DESC LIMIT 1) ORDER BY ts",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Latest fault label",
+      "datasource": {"type": "postgres", "uid": "TimescaleDB"},
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+      "targets": [
+        {
+          "rawSql": "SELECT fault_label FROM device_features ORDER BY ts DESC LIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Rows ingested",
+      "datasource": {"type": "postgres", "uid": "TimescaleDB"},
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+      "targets": [
+        {
+          "rawSql": "SELECT count(*) AS rows FROM device_features",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

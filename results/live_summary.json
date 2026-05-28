@@ -1,0 +1,21 @@
+{
+  "row_count": 180,
+  "rows_by_fault_label": {
+    "healthy": 60,
+    "imbalance": 60,
+    "outer_race": 60
+  },
+  "ts_min": "2026-05-28 02:56:34.202000+00:00",
+  "ts_max": "2026-05-28 02:59:33.201000+00:00",
+  "kafka_scores_count": 176,
+  "kafka_alerts_count": 1,
+  "alerts": [
+    {
+      "device_id": "d001",
+      "ts": "2026-05-28T02:58:00.201Z",
+      "rolling_mean": -0.10187323174910225,
+      "threshold": -0.1,
+      "buffer_size": 30
+    }
+  ]
+}
